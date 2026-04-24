@@ -1,0 +1,48 @@
+;; ralph.sb — macOS sandbox profile for Ralph
+;;
+;; Strategy:
+;;   - Allow everything by default (network, IPC, keychain access, etc.)
+;;     so Claude can still talk to the API and macOS keychain.
+;;   - Deny ALL file writes by default.
+;;   - Then re-allow writes only to:
+;;       * the project you're running Ralph in  (param PROJECT)
+;;       * Claude Code's own state dir          (param HOME_CLAUDE)
+;;       * common build-tool caches             (params HOME_*)
+;;       * /tmp and macOS per-user temp dirs
+;;
+;; Invoke via ralph-sandboxed.sh, which passes all the -D params.
+;;
+;; Tighten later by:
+;;   - adding (deny file-read* (subpath "...")) rules for ~/.ssh, ~/.aws, etc.
+;;   - adding a (deny network-outbound) + allowlist of hosts.
+
+(version 1)
+
+(allow default)
+
+(deny file-write*)
+
+(allow file-write*
+  (subpath (param "PROJECT"))
+  (subpath (param "HOME_CLAUDE"))
+  (subpath (param "HOME_CACHE"))
+  (subpath (param "HOME_NPM"))
+  (subpath (param "HOME_YARN"))
+  (subpath (param "HOME_PNPM"))
+  (subpath (param "HOME_LIB_CACHES"))
+  (subpath (param "HOME_LIB_LOGS"))
+  (subpath "/tmp")
+  (subpath "/private/tmp")
+  (subpath "/private/var/folders")
+
+  ;; Claude Code's main config file (and sibling temp/lock files for
+  ;; atomic writes). This lives next to ~/.claude/, not inside it, so
+  ;; the HOME_CLAUDE subpath alone isn't enough.
+  (regex #"^/Users/[^/]+/\.claude\.json($|\.)")
+  (regex #"^/Users/[^/]+/\.claude/\.")
+
+  (regex #"^/dev/tty")
+  (literal "/dev/null")
+  (literal "/dev/stdout")
+  (literal "/dev/stderr")
+  (literal "/dev/dtracehelper"))
