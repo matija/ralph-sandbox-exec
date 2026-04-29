@@ -2,21 +2,29 @@
 
 Run [Ralph](https://ghuntley.com/ralph/) with `sandbox-exec` (macOS) instead of Docker.
 
-## Files
-
-- `ralph.sb` — sandbox profile (writes allowed in project + a few caches).
-- `ralph-sandboxed.sh` — one-shot run.
-- `afk-ralph.sh <n>` — loop up to `n` times, or until Ralph emits `<promise>COMPLETE</promise>`.
-- `ralph-once.sh` — original, no sandbox.
-
 ## Use
 
 ```bash
 cd some-project   # needs PRD.md and progress.txt
-/path/to/ralph/ralph-sandboxed.sh
-# or
-/path/to/ralph/afk-ralph.sh 20
+
+# one task, sandboxed
+/path/to/ralph-sandbox-exec/ralph-sandboxed.sh
+
+# loop up to 20 tasks
+/path/to/ralph-sandbox-exec/afk-ralph.sh 20
 ```
 
-Blocks dumb writes outside the project dir. Doesn't block reads or network,
-so this isn't a hostile-agent defense.
+Claude is the default. Use another agent with a flag:
+
+```bash
+/path/to/ralph-sandbox-exec/ralph-sandboxed.sh --codex
+/path/to/ralph-sandbox-exec/afk-ralph.sh --opencode 20
+```
+
+Agent commands:
+
+- Claude: `claude --dangerously-skip-permissions`
+- Codex: `codex --sandbox danger-full-access --ask-for-approval never`
+- opencode: `opencode run --dangerously-skip-permissions`
+
+The sandbox blocks writes outside the project and common agent/cache dirs. It does not block reads or network.

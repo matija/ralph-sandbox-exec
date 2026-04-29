@@ -6,7 +6,7 @@
 ;;   - Deny ALL file writes by default.
 ;;   - Then re-allow writes only to:
 ;;       * the project you're running Ralph in  (param PROJECT)
-;;       * Claude Code's own state dir          (param HOME_CLAUDE)
+;;       * agent state dirs                     (params HOME_CLAUDE, HOME_CODEX, etc.)
 ;;       * common build-tool caches             (params HOME_*)
 ;;       * /tmp and macOS per-user temp dirs
 ;;
@@ -25,6 +25,11 @@
 (allow file-write*
   (subpath (param "PROJECT"))
   (subpath (param "HOME_CLAUDE"))
+  (subpath (param "HOME_CODEX"))
+  (subpath (param "HOME_OPENCODE"))
+  (subpath (param "HOME_CONFIG"))
+  (subpath (param "HOME_LOCAL_SHARE"))
+  (subpath (param "HOME_LOCAL_STATE"))
   (subpath (param "HOME_CACHE"))
   (subpath (param "HOME_NPM"))
   (subpath (param "HOME_YARN"))
@@ -38,7 +43,8 @@
   ;; Claude Code's main config file (and sibling temp/lock files for
   ;; atomic writes). This lives next to ~/.claude/, not inside it, so
   ;; the HOME_CLAUDE subpath alone isn't enough.
-  (regex #"^/Users/[^/]+/\.claude\.json($|\.)")
+  (literal (param "HOME_CLAUDE_JSON"))
+  (regex #"^/Users/[^/]+/\.claude\.json\.")
   (regex #"^/Users/[^/]+/\.claude/\.")
 
   (regex #"^/dev/tty")
