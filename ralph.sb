@@ -27,6 +27,7 @@
   (subpath (param "HOME_CLAUDE"))
   (subpath (param "HOME_CODEX"))
   (subpath (param "HOME_OPENCODE"))
+  (subpath (param "HOME_CURSOR"))
   (subpath (param "HOME_CONFIG"))
   (subpath (param "HOME_LOCAL_SHARE"))
   (subpath (param "HOME_LOCAL_STATE"))

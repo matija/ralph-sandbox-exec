@@ -8,7 +8,7 @@ source "$SCRIPT_DIR/ralph-agent.sh"
 set_agent_from_args "$@"
 
 if [ "${REMAINING_ARGS[0]-}" = "--help" ] || [ "${REMAINING_ARGS[0]-}" = "-h" ]; then
-  echo "Usage: $0 [--claude|--codex|--opencode]" >&2
+  echo "Usage: $0 [--claude|--codex|--opencode|--cursor]" >&2
   exit 0
 fi
 

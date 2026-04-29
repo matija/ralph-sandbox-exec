@@ -15,6 +15,9 @@ set_agent_from_args() {
       --opencode)
         AGENT="opencode"
         ;;
+      --cursor)
+        AGENT="cursor"
+        ;;
       --help|-h)
         REMAINING_ARGS+=("$1")
         ;;
@@ -55,6 +58,12 @@ run_agent() {
     opencode:once|opencode:sandboxed|opencode:print)
       opencode run --dangerously-skip-permissions "$prompt"
       ;;
+    cursor:once|cursor:sandboxed)
+      cursor-agent --force --sandbox disabled "$prompt"
+      ;;
+    cursor:print)
+      cursor-agent --print --force --trust --sandbox disabled "$prompt"
+      ;;
     *)
       echo "Unknown agent/mode: $agent/$mode" >&2
       return 1
@@ -64,7 +73,7 @@ run_agent() {
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <claude|codex|opencode> <once|sandboxed|print> <prompt>" >&2
+    echo "Usage: $0 <claude|codex|opencode|cursor> <once|sandboxed|print> <prompt>" >&2
     exit 1
   fi
 

@@ -19,6 +19,7 @@ Claude is the default. Use another agent with a flag:
 ```bash
 /path/to/ralph-sandbox-exec/ralph-sandboxed.sh --codex
 /path/to/ralph-sandbox-exec/afk-ralph.sh --opencode 20
+/path/to/ralph-sandbox-exec/ralph-sandboxed.sh --cursor
 ```
 
 Agent commands:
@@ -26,5 +27,6 @@ Agent commands:
 - Claude: `claude --dangerously-skip-permissions`
 - Codex: `codex --sandbox danger-full-access --ask-for-approval never`
 - opencode: `opencode run --dangerously-skip-permissions`
+- Cursor: `cursor-agent --force --sandbox disabled`
 
 The sandbox blocks writes outside the project and common agent/cache dirs. It does not block reads or network.

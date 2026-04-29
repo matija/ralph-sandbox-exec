@@ -26,7 +26,7 @@ source "$SCRIPT_DIR/ralph-agent.sh"
 set_agent_from_args "$@"
 
 if [ "${REMAINING_ARGS[0]-}" = "--help" ] || [ "${REMAINING_ARGS[0]-}" = "-h" ]; then
-  echo "Usage: $0 [--claude|--codex|--opencode]" >&2
+  echo "Usage: $0 [--claude|--codex|--opencode|--cursor]" >&2
   exit 0
 fi
 
@@ -48,6 +48,7 @@ exec sandbox-exec \
   -D HOME_CLAUDE_JSON="$HOME/.claude.json" \
   -D HOME_CODEX="$HOME/.codex" \
   -D HOME_OPENCODE="$HOME/.opencode" \
+  -D HOME_CURSOR="$HOME/.cursor" \
   -D HOME_CONFIG="$HOME/.config" \
   -D HOME_LOCAL_SHARE="$HOME/.local/share" \
   -D HOME_LOCAL_STATE="$HOME/.local/state" \
