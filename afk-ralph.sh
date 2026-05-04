@@ -17,7 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/ralph-agent.sh"
 
 set_agent_from_args "$@"
-set -- "${REMAINING_ARGS[@]}"
+set -- ${REMAINING_ARGS[@]+"${REMAINING_ARGS[@]}"}
 
 if [ "${1-}" = "--help" ] || [ "${1-}" = "-h" ]; then
   echo "Usage: $0 [--claude|--codex|--opencode|--cursor] <iterations>" >&2
@@ -37,6 +37,9 @@ if [ ! -f "$PROFILE" ]; then
   exit 1
 fi
 
+tmpfile=$(mktemp)
+trap 'rm -f "$tmpfile"' EXIT
+
 for ((i=1; i<=$1; i++)); do
   echo "=== iteration $i/$1 @ $(date +'%H:%M:%S') ==="
 
@@ -49,7 +52,9 @@ for ((i=1; i<=$1; i++)); do
   ONLY WORK ON A SINGLE TASK. \
   If the PRD is complete, output <promise>COMPLETE</promise>."
 
-  result=$(sandbox-exec \
+  : > "$tmpfile"
+
+  sandbox-exec \
     -D PROJECT="$PROJECT" \
     -D HOME_CLAUDE="$HOME/.claude" \
     -D HOME_CLAUDE_JSON="$HOME/.claude.json" \
@@ -66,11 +71,10 @@ for ((i=1; i<=$1; i++)); do
     -D HOME_LIB_CACHES="$HOME/Library/Caches" \
     -D HOME_LIB_LOGS="$HOME/Library/Logs" \
     -f "$PROFILE" \
-    bash "$SCRIPT_DIR/ralph-agent.sh" "$AGENT" print "$prompt")
+    bash "$SCRIPT_DIR/ralph-agent.sh" "$AGENT" stream "$prompt" \
+    | tee "$tmpfile"
 
-  echo "$result"
-
-  if [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
+  if grep -q "<promise>COMPLETE</promise>" "$tmpfile"; then
     echo "=== PRD complete after $i iterations ==="
     exit 0
   fi

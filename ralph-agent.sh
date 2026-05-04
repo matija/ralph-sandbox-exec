@@ -49,13 +49,36 @@ run_agent() {
     claude:print)
       claude --dangerously-skip-permissions -p "$prompt"
       ;;
+    claude:stream)
+      claude --dangerously-skip-permissions --verbose --print --output-format stream-json "$prompt" </dev/null \
+        | jq --unbuffered -rj '
+            select(.type == "assistant").message.content[]?
+            | select(.type == "text").text // empty
+            | gsub("\n"; "\r\n") + "\r\n\n"'
+      ;;
     codex:once|codex:sandboxed)
       codex --sandbox danger-full-access --ask-for-approval never "$prompt"
       ;;
     codex:print)
       codex exec --sandbox danger-full-access --ask-for-approval never --color never "$prompt"
       ;;
+    codex:stream)
+      codex exec --json --sandbox danger-full-access --color never --skip-git-repo-check "$prompt" </dev/null \
+        | jq --unbuffered -rj '
+            select(.type == "item.completed").item as $i
+            | if   $i.type == "agent_message"    then ($i.text    // "") + "\n\n"
+              elif $i.type == "reasoning"        then "[reasoning] " + (($i.text // "") | gsub("\n"; " ")) + "\n"
+              elif $i.type == "command_execution" then "$ " + ($i.command // "") + "\n"
+              elif $i.text    then $i.text + "\n"
+              elif $i.command then "$ " + $i.command + "\n"
+              else empty end'
+      ;;
     opencode:once|opencode:sandboxed|opencode:print)
+      opencode run --dangerously-skip-permissions "$prompt"
+      ;;
+    opencode:stream)
+      # opencode --format json buffers everything until exit, so just use the
+      # default plain-text print mode which already streams.
       opencode run --dangerously-skip-permissions "$prompt"
       ;;
     cursor:once|cursor:sandboxed)
@@ -63,6 +86,14 @@ run_agent() {
       ;;
     cursor:print)
       cursor-agent --print --force --trust --sandbox disabled "$prompt"
+      ;;
+    cursor:stream)
+      cursor-agent --print --force --trust --sandbox disabled \
+        --output-format stream-json --stream-partial-output "$prompt" </dev/null \
+        | jq --unbuffered -rj '
+            select(.type == "assistant" and (.timestamp_ms != null)).message.content[]?
+            | select(.type == "text").text // empty
+            | gsub("\n"; "\r\n")'
       ;;
     *)
       echo "Unknown agent/mode: $agent/$mode" >&2
@@ -73,7 +104,7 @@ run_agent() {
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <claude|codex|opencode|cursor> <once|sandboxed|print> <prompt>" >&2
+    echo "Usage: $0 <claude|codex|opencode|cursor> <once|sandboxed|print|stream> <prompt>" >&2
     exit 1
   fi
 
