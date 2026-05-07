@@ -9,7 +9,7 @@
 #
 # When Ralph emits <promise>COMPLETE</promise> the loop exits early.
 #
-# Usage: ./afk-ralph.sh [--claude|--codex|--opencode|--cursor] <max-iterations>
+# Usage: ./afk-ralph.sh [--claude|--codex|--opencode|--pi|--cursor] <max-iterations>
 
 set -euo pipefail
 
@@ -20,12 +20,12 @@ set_agent_from_args "$@"
 set -- ${REMAINING_ARGS[@]+"${REMAINING_ARGS[@]}"}
 
 if [ "${1-}" = "--help" ] || [ "${1-}" = "-h" ]; then
-  echo "Usage: $0 [--claude|--codex|--opencode|--cursor] <iterations>" >&2
+  echo "Usage: $0 [--claude|--codex|--opencode|--pi|--cursor] <iterations>" >&2
   exit 0
 fi
 
 if [ -z "${1-}" ]; then
-  echo "Usage: $0 [--claude|--codex|--opencode|--cursor] <iterations>" >&2
+  echo "Usage: $0 [--claude|--codex|--opencode|--pi|--cursor] <iterations>" >&2
   exit 1
 fi
 
@@ -60,6 +60,7 @@ for ((i=1; i<=$1; i++)); do
     -D HOME_CLAUDE_JSON="$HOME/.claude.json" \
     -D HOME_CODEX="$HOME/.codex" \
     -D HOME_OPENCODE="$HOME/.opencode" \
+    -D HOME_PI="$HOME/.pi" \
     -D HOME_CURSOR="$HOME/.cursor" \
     -D HOME_CONFIG="$HOME/.config" \
     -D HOME_LOCAL_SHARE="$HOME/.local/share" \

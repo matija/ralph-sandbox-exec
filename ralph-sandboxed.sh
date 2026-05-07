@@ -5,8 +5,7 @@
 # Same spirit as ralph-once.sh, but:
 #   * uses --dangerously-skip-permissions (no prompts at all)
 #   * wraps the whole process tree in sandbox-exec so file writes are
-#     restricted to the current project dir (+ a few caches Claude
-#     legitimately needs).
+#     restricted to the current project dir (+ common agent/cache dirs).
 #   * runs as your normal user, so macOS keychain auth just works —
 #     no Docker, no credential juggling.
 #
@@ -26,7 +25,7 @@ source "$SCRIPT_DIR/ralph-agent.sh"
 set_agent_from_args "$@"
 
 if [ "${REMAINING_ARGS[0]-}" = "--help" ] || [ "${REMAINING_ARGS[0]-}" = "-h" ]; then
-  echo "Usage: $0 [--claude|--codex|--opencode|--cursor]" >&2
+  echo "Usage: $0 [--claude|--codex|--opencode|--pi|--cursor]" >&2
   exit 0
 fi
 
@@ -48,6 +47,7 @@ exec sandbox-exec \
   -D HOME_CLAUDE_JSON="$HOME/.claude.json" \
   -D HOME_CODEX="$HOME/.codex" \
   -D HOME_OPENCODE="$HOME/.opencode" \
+  -D HOME_PI="$HOME/.pi" \
   -D HOME_CURSOR="$HOME/.cursor" \
   -D HOME_CONFIG="$HOME/.config" \
   -D HOME_LOCAL_SHARE="$HOME/.local/share" \

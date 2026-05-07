@@ -15,6 +15,9 @@ set_agent_from_args() {
       --opencode)
         AGENT="opencode"
         ;;
+      --pi)
+        AGENT="pi"
+        ;;
       --cursor)
         AGENT="cursor"
         ;;
@@ -81,6 +84,16 @@ run_agent() {
       # default plain-text print mode which already streams.
       opencode run --dangerously-skip-permissions "$prompt"
       ;;
+    pi:once|pi:sandboxed|pi:print)
+      pi -p "$prompt"
+      ;;
+    pi:stream)
+      pi --mode json "$prompt" </dev/null \
+        | jq --unbuffered -rj '
+            select(.type == "message_update" and .assistantMessageEvent.type == "text_delta")
+            | .assistantMessageEvent.delta // empty
+            | gsub("\n"; "\r\n")'
+      ;;
     cursor:once|cursor:sandboxed)
       cursor-agent --force --sandbox disabled "$prompt"
       ;;
@@ -104,7 +117,7 @@ run_agent() {
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <claude|codex|opencode|cursor> <once|sandboxed|print|stream> <prompt>" >&2
+    echo "Usage: $0 <claude|codex|opencode|pi|cursor> <once|sandboxed|print|stream> <prompt>" >&2
     exit 1
   fi
 
