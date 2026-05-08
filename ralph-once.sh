@@ -19,4 +19,8 @@ PROMPT="@PRD.md @progress.txt @plans/ \
 4. Update progress.txt with what you did. \
 ONLY DO ONE TASK AT A TIME."
 
-run_agent "$AGENT" once "$PROMPT"
+if [ "$AGENT" = "pi" ]; then
+  run_agent "$AGENT" stream "$PROMPT"
+else
+  run_agent "$AGENT" once "$PROMPT"
+fi

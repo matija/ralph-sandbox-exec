@@ -85,14 +85,53 @@ run_agent() {
       opencode run --dangerously-skip-permissions "$prompt"
       ;;
     pi:once|pi:sandboxed|pi:print)
-      pi -p "$prompt"
+      # pi only resolves Claude-style @file references when each @token is
+      # its own arg, and it only accepts regular files (directories error
+      # with EISDIR). Peel leading @tokens off the prompt and keep the ones
+      # that point at existing files; the agent can read directories itself.
+      local pi_files=()
+      local pi_message="$prompt"
+      local pi_tok pi_path
+      while [[ $pi_message =~ ^@[^[:space:]]+ ]]; do
+        pi_tok="${BASH_REMATCH[0]}"
+        pi_path="${pi_tok#@}"
+        if [ -f "$pi_path" ]; then
+          pi_files+=("$pi_tok")
+        fi
+        pi_message="${pi_message:${#pi_tok}}"
+        pi_message="${pi_message#"${pi_message%%[![:space:]]*}"}"
+      done
+      pi -p "${pi_files[@]}" "$pi_message" </dev/null
       ;;
     pi:stream)
-      pi --mode json "$prompt" </dev/null \
+      # Text print mode buffers until the run finishes. JSON mode gives us
+      # incremental assistant deltas and tool starts, which makes long Ralph
+      # runs look alive and lets afk-ralph detect completion as it streams.
+      local pi_files=()
+      local pi_message="$prompt"
+      local pi_tok pi_path
+      while [[ $pi_message =~ ^@[^[:space:]]+ ]]; do
+        pi_tok="${BASH_REMATCH[0]}"
+        pi_path="${pi_tok#@}"
+        if [ -f "$pi_path" ]; then
+          pi_files+=("$pi_tok")
+        fi
+        pi_message="${pi_message:${#pi_tok}}"
+        pi_message="${pi_message#"${pi_message%%[![:space:]]*}"}"
+      done
+      pi --mode json "${pi_files[@]}" "$pi_message" </dev/null \
         | jq --unbuffered -rj '
-            select(.type == "message_update" and .assistantMessageEvent.type == "text_delta")
-            | .assistantMessageEvent.delta // empty
-            | gsub("\n"; "\r\n")'
+            if .type == "message_update" and .assistantMessageEvent.type == "text_delta" then
+              (.assistantMessageEvent.delta // "" | gsub("\n"; "\r\n"))
+            elif .type == "tool_execution_start" then
+              if .toolName == "bash" and (.args.command // "") != "" then
+                "\r\n$ " + .args.command + "\r\n"
+              elif (.args.path // "") != "" then
+                "\r\n[" + .toolName + "] " + .args.path + "\r\n"
+              else
+                "\r\n[" + .toolName + "]\r\n"
+              end
+            else empty end'
       ;;
     cursor:once|cursor:sandboxed)
       cursor-agent --force --sandbox disabled "$prompt"

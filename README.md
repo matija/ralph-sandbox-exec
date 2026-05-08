@@ -28,7 +28,7 @@ Agent commands:
 - Claude: `claude --dangerously-skip-permissions`
 - Codex: `codex --sandbox danger-full-access --ask-for-approval never`
 - opencode: `opencode run --dangerously-skip-permissions`
-- Pi: `pi -p`
+- Pi: `pi --mode json` for streaming runs, `pi -p` for print runs
 - Cursor: `cursor-agent --force --sandbox disabled`
 
 The sandbox blocks writes outside the project and common agent/cache dirs. It does not block reads or network.
